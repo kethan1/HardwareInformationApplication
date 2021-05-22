@@ -1,28 +1,13 @@
 from tkinter import *
 import tkinter.font as font
 import psutil
-import clr
 import os
-import win32api
 import threading
 import time
 
-#List for hardware types and sensor types that our DLL can open
-OHM_hwtypes = [ 'Mainboard', 'SuperIO', 'CPU', 'RAM', 'GpuNvidia', 'GpuAti', 'TBalancer', 'Heatmaster', 'SSD' ]
-OHM_sensortypes = [
- 'Voltage', 'Clock', 'Temperature', 'Load', 'Fan', 'Flow', 'Control', 'Level', 'Factor', 'Power', 'Data', 'SmallData'
-]
+# cat /sys/class/thermal/thermal_zoneN/temp
 
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
 
 
 def init_OHM() :

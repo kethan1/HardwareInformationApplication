@@ -1,0 +1,4 @@
+-r requirements.txt
+pythonnet
+elevate
+pywin32
