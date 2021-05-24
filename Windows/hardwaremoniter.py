@@ -61,7 +61,7 @@ def parse_sensor(snsr):
     if snsr.Value is not None:
         if snsr.SensorType == OHM_sensortypes.index('Temperature'):
             HwType = OHM_hwtypes[snsr.Hardware.HardwareType]
-            return {"Type" : HwType, "Name" : snsr.Hardware.Name, "Sensor" : snsr.Name, "Reading" : u'%s\xb0C' % snsr.Value}
+            return {"Type": HwType, "Name": snsr.Hardware.Name, "Sensor": snsr.Name, "Reading": f'{snsr.Value}\xb0C'}
 
 
 names = {}
@@ -143,35 +143,38 @@ master.title("Hardware Moniter")
 
 myFont = font.Font(family='Comfortaa', size=15)
 
+print(names)
+
+gpu_temps = {}
 
 for name, value in names.items():
-    globals()[f'{name}L'] = Label(master, text=f'{name}: {value}', font=myFont)
-    globals()[f'{name}L'].pack()
+    gpu_temps[f'{name}L'] = Label(master, text=f'{name}: {value}', font=myFont)
+    gpu_temps[f'{name}L'].pack()
 
 
 if nvidia:
     mem = round(int(subprocess.check_output(shlex.split("nvidia-smi --query-gpu=memory.total --format=csv,noheader"), shell=True).decode("utf-8").strip().split()[0])/1000, 1)
 
-    nvidia_usage = StringVar()
-    nvidia_usage.set(f'GPU Usage: ')
-    nvidia_usageL = Label(master, textvariable=nvidia_usage, font=myFont)
-    nvidia_usageL.pack()
+    gpu_temps["nvidia_usage"] = StringVar()
+    gpu_temps["nvidia_usage"].set(f'GPU Usage: ')
+    gpu_temps["nvidia_usageL"] = Label(master, textvariable=gpu_temps["nvidia_usage"], font=myFont)
+    gpu_temps["nvidia_usageL"].pack()
 
-    nvidia_temp = StringVar()
-    nvidia_temp.set(f'GPU Temp: °C')
-    nvidia_tempL = Label(master, textvariable=nvidia_temp, font=myFont)
-    nvidia_tempL.pack()
+    gpu_temps["nvidia_temp"] = StringVar()
+    gpu_temps["nvidia_temp"].set(f'GPU Temp: °C')
+    gpu_temps["nvidia_tempL"] = Label(master, textvariable=gpu_temps["nvidia_temp"], font=myFont)
+    gpu_temps["nvidia_tempL"].pack()
 
-    nvidia_memL = Label(master, text=f'GPU Mem: {mem} Gigabytes', font=myFont)
-    nvidia_memL.pack()
+    gpu_temps["nvidia_memL"] = Label(master, text=f'GPU Mem: {mem} Gigabytes', font=myFont)
+    gpu_temps["nvidia_memL"].pack()
 
-
+print(temps)
 for name, tmps in temps.items():
     for temp in tmps:
-        globals()[temp] = StringVar()
-        globals()[temp].set(f'{temp}: {tmps[temp]}')
-        globals()[f'{name}L'] = Label(master, textvariable=globals()[temp], font=myFont)
-        globals()[f'{name}L'].pack()
+        gpu_temps[f"{name}_tmp_var"] = StringVar()
+        gpu_temps[f"{name}_tmp_var"].set(f'{temp}: {tmps[temp]}')
+        gpu_temps[f'{name}L'] = Label(master, textvariable=gpu_temps[f"{name}_tmp_var"], font=myFont)
+        gpu_temps[f'{name}L'].pack()
 
 
 coresL = Label(master, text=f'Physical CPU Cores: {psutil.cpu_count(logical=False)}', font=myFont)
@@ -261,9 +264,9 @@ while True:
 
     for name, tmps in temps.items():
         for temp in tmps:
-            globals()[temp].set(f'{temp}: {tmps[temp]}')
+            gpu_temps[temp].set(f'{temp}_{name}: {tmps[temp]}')
 
-    nvidia_temp.set(to_set_nvidia_temp)
-    nvidia_usage.set(to_set_nvidia_usage)
+    gpu_temps["nvidia_temp"].set(to_set_nvidia_temp)
+    gpu_temps["nvidia_usage"].set(to_set_nvidia_usage)
     
     time.sleep(0.2)
