@@ -1,6 +1,8 @@
 import time
 import sys
 import os
+import subprocess
+import shlex
 
 from tkinter import *
 import tkinter.font as font
@@ -15,7 +17,7 @@ import elevate
 #List for hardware types and sensor types that our DLL can open
 OHM_hwtypes = [ 'Mainboard', 'SuperIO', 'CPU', 'RAM', 'GpuNvidia', 'GpuAti', 'TBalancer', 'Heatmaster', 'SSD' ]
 OHM_sensortypes = [
- 'Voltage', 'Clock', 'Temperature', 'Load', 'Fan', 'Flow', 'Control', 'Level', 'Factor', 'Power', 'Data', 'SmallData'
+    'Voltage', 'Clock', 'Temperature', 'Load', 'Fan', 'Flow', 'Control', 'Level', 'Factor', 'Power', 'Data', 'SmallData'
 ]
 
 
@@ -39,27 +41,27 @@ def init_OHM() :
     return hw
 
 
-def fetch_data( handle ) :
+def fetch_data(handle):
     out = []
-    for i in handle.Hardware :
+    for i in handle.Hardware:
         i.Update()
-        for sensor in i.Sensors :
-            thing = parse_sensor( sensor )
-            if thing is not None :
-                out.append( thing )
-        for j in i.SubHardware :
+        for sensor in i.Sensors:
+            thing = parse_sensor(sensor)
+            if thing is not None:
+                out.append(thing)
+        for j in i.SubHardware:
             j.Update()
-            for subsensor in j.Sensors :
-                thing = parse_sensor( subsensor )
-                out.append( thing )
+            for subsensor in j.Sensors:
+                thing = parse_sensor(subsensor)
+                out.append(thing)
     return out
 
 
-def parse_sensor(snsr) :
-    if snsr.Value is not None :
-        if snsr.SensorType == OHM_sensortypes.index( 'Temperature' ) :
-            HwType = OHM_hwtypes[ snsr.Hardware.HardwareType ]
-            return { "Type" : HwType, "Name" : snsr.Hardware.Name, "Sensor" : snsr.Name, "Reading" : u'%s\xb0C' % snsr.Value }
+def parse_sensor(snsr):
+    if snsr.Value is not None:
+        if snsr.SensorType == OHM_sensortypes.index('Temperature'):
+            HwType = OHM_hwtypes[snsr.Hardware.HardwareType]
+            return {"Type" : HwType, "Name" : snsr.Hardware.Name, "Sensor" : snsr.Name, "Reading" : u'%s\xb0C' % snsr.Value}
 
 
 names = {}
@@ -148,19 +150,19 @@ for name, value in names.items():
 
 
 if nvidia:
-    things = [i for i in list(os.popen('nvidia-smi').readlines())[8].split(' ') if i != '' and i != '|' and i != '/' and i != '!\n']
+    mem = round(int(subprocess.check_output(shlex.split("nvidia-smi --query-gpu=memory.total --format=csv,noheader"), shell=True).decode("utf-8").strip().split()[0])/1000, 1)
 
     nvidia_usage = StringVar()
-    nvidia_usage.set(f'GPU Usage: {things[7]}')
+    nvidia_usage.set(f'GPU Usage: ')
     nvidia_usageL = Label(master, textvariable=nvidia_usage, font=myFont)
     nvidia_usageL.pack()
 
     nvidia_temp = StringVar()
-    nvidia_temp.set(f'GPU Temp: {things[1].strip("C")}°C')
+    nvidia_temp.set(f'GPU Temp: °C')
     nvidia_tempL = Label(master, textvariable=nvidia_temp, font=myFont)
     nvidia_tempL.pack()
 
-    nvidia_memL = Label(master, text=f'GPU Mem: {things[6]}', font=myFont)
+    nvidia_memL = Label(master, text=f'GPU Mem: {mem} Gigabytes', font=myFont)
     nvidia_memL.pack()
 
 
@@ -223,9 +225,10 @@ def command_nvidia_smi():
 
     while True:
         if nvidia:
-            things = [i for i in list(os.popen('nvidia-smi').readlines())[8].split(' ') if i != '' and i != '|' and i != '/' and i != '!\n']
-            to_set_nvidia_temp = f'GPU Temp: {things[1].strip("C")}°C'
-            to_set_nvidia_usage = f'GPU Usage: {things[7]}'
+            temp = subprocess.check_output(shlex.split("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"), shell=True).decode("utf-8").strip().split()
+            usage = ''.join(subprocess.check_output(shlex.split("nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader"), shell=True).decode("utf-8").strip().split())
+            to_set_nvidia_temp = f'GPU Temp: {temp[0]}°C'
+            to_set_nvidia_usage = f'GPU Usage: {usage}'
         refresh_tmps()
         Ram.refresh()
         time.sleep(0.4)        
