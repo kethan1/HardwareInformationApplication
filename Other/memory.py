@@ -2,30 +2,16 @@
 import psutil
 import os
 
-print(psutil.cpu_percent())
 print(psutil.virtual_memory())
-print('memory % used:', psutil.virtual_memory()[2])
+print('Total Memory (in Bytes):', psutil.virtual_memory().total)
+print('Memory Used (in Bytes):', psutil.virtual_memory().used)
+print('Memory Available (in Bytes):', psutil.virtual_memory().available)
+
+# [[n * "1" for n in range(2000)] for _ in range(2000)]  # should see a spike in memory usage when uncommented
+
 pid = os.getpid()
-
-
-py = psutil.Process(pid)
-memoryUse = py.memory_info()[0]/2.**30  
-print('memory use:', memoryUse)
-
-
-mem=str(os.popen('free -t -m').readlines())
-T_ind=mem.index('T')
-mem_G=mem[T_ind+14:-4]
-S1_ind=mem_G.index(' ')
-mem_T=mem_G[0:S1_ind]
-
-
-mem_G1=mem_G[S1_ind+8:]
-S2_ind=mem_G1.index(' ')
-mem_U=mem_G1[0:S2_ind]
-
-mem_F=mem_G1[S2_ind+8:]
-print 'Summary = ' + mem_G
-print 'Total Memory = ' + mem_T +' MB'
-print 'Used Memory = ' + mem_U +' MB'
-print 'Free Memory = ' + mem_F +' MB'
+python_process = psutil.Process(pid)
+print(python_process)
+print(python_process.memory_info())
+memoryUse = python_process.memory_info()[0] / 2 ** 30
+print(f'Memory Used: {memoryUse}')
